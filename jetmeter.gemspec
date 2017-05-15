@@ -10,6 +10,8 @@ Gem::Specification.new do |s|
   s.license = 'BSD-2-Clause'
 
   s.files   = Dir['lib/*.rb'] + Dir['bin/*']
+  
+  s.executables << 'jetmeter'
 
   s.add_runtime_dependency 'octokit', ['~> 4.7.0']
 

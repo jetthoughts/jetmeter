@@ -52,4 +52,9 @@ class Jetmeter::CloseAccumulatorTest < Minitest::Test
 
     refute(accumulator.selector('Closed').call(event))
   end
+
+  def test_additive_always_true
+    accumulator = build_accumulator
+    assert(accumulator.additive)
+  end
 end

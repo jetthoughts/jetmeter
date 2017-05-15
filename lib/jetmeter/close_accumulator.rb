@@ -12,5 +12,9 @@ module Jetmeter
     def selector(flow_name)
       ->(event) { CLOSING_EVENTS.include?(event.event) && @flows[flow_name]&.closing? }
     end
+
+    def additive
+      true
+    end
   end
 end
