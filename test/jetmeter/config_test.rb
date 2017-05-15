@@ -27,6 +27,43 @@ class Jetmeter::ConfigTest < Minitest::Test
     assert_equal('marchi-martius/jetmeter', config.repository_name)
   end
 
+  def test_registers_flows
+    config = Jetmeter::Config.new do |c|
+      c.register_flow 'Dev - Ready' do |f|
+      end
+    end
+
+    assert_includes(config.flows.keys, 'Dev - Ready')
+  end
+
+  def test_registers_flow_with_addition_transitions
+    config = Jetmeter::Config.new do |c|
+      c.register_flow 'Backlog' do |f|
+        f.register_addition nil => 'Backlog'
+      end
+    end
+
+    assert_equal(['Backlog'], config.flows['Backlog'].additions[nil])
+  end
+
+  def test_registers_flow_with_substruction_transitions
+    config = Jetmeter::Config.new do |c|
+      c.register_flow 'WIP' do |f|
+        f.register_substraction 'Dev - Working' => 'Dev - Ready'
+      end
+    end
+
+    assert_equal(['Dev - Ready'], config.flows['WIP'].substractions['Dev - Working'])
+  end
+
+  def test_register_closing_flow
+    config = Jetmeter::Config.new do |c|
+      c.register_closing_flow 'Closed'
+    end
+
+    assert(config.flows['Closed'].closing?)
+  end
+
   def test_raises_error_if_no_block_passed
     assert_raises(ArgumentError) { Jetmeter::Config.new }
   end

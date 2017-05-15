@@ -6,7 +6,8 @@ module Jetmeter
     end
 
     def load
-      @client.repository_issue_events(@repository_name)
+      return @events if defined?(@events)
+      @events = @client.repository_issue_events(@repository_name)
     end
   end
 end
