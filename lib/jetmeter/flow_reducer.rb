@@ -7,17 +7,22 @@ module Jetmeter
       @flows = {}
     end
 
-    def reduce(accomulator)
-      @flows[accomulator.flow] = Hash.new { |flow, date| flow[date] = [] }
+    def reduce(flow, accumulator)
+      @flows[flow] = Hash.new { |hash, date| hash[date] = [] }
 
-      @events.select(&accomulator.selector).each do |event|
-        if accomulator.additive?
-          @flows[accomulator.flow][event.created_at.to_date].push(event)
+      @events.select(&accumulator.selector(flow)).each do |event|
+        if accumulator.additive
+          @flows[flow][event.created_at.to_date].push(event)
         else
-          @flows[accomulator.flow][event.created_at.to_date].delete(event)
+          @flows[flow][event.created_at.to_date].delete(event)
         end
       end
 
+      self
+    end
+
+    def reduce_all(flows, accumulators)
+      flows.each { |flow| accumulators.each { |accum| reduce(flow, accum) } }
       self
     end
   end

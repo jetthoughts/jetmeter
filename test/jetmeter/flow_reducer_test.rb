@@ -1,20 +1,23 @@
 require 'minitest/autorun'
 require 'jetmeter/flow_reducer'
-require 'date'
+
+require_relative 'test_events_loader'
 
 class Jetmeter::FlowReducerTest < Minitest::Test
   def test_reduce_chains_self
     reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new)
-    accomulator = TestAccomulator.new
+    accumulator = TestAccumulator.new
 
-    assert_instance_of(Jetmeter::FlowReducer, reducer.reduce(accomulator))
+    result = reducer.reduce('Backlog', accumulator)
+
+    assert_instance_of(Jetmeter::FlowReducer, result)
   end
 
-  def test_reduce_gathers_flows
+  def test_reduce_gathers_accomulated_flows
     reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new)
-    accomulator = TestAccomulator.new
+    accumulator = TestAccumulator.new
 
-    result = reducer.reduce(accomulator)
+    result = reducer.reduce('Dev - Ready', accumulator)
 
     assert_equal(
       ['Dev - Ready'],
@@ -23,68 +26,68 @@ class Jetmeter::FlowReducerTest < Minitest::Test
   end
 
   def test_reduce_aggregates_events_by_date
+    reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new)
+    accumulator = TestAccumulator.new
+
+    result = reducer.reduce('Dev - Ready', accumulator)
+
+    assert_equal(
+      [Date.new(2017, 5, 11), Date.new(2017, 5, 12)],
+      result.flows['Dev - Ready'].keys
+    )
+  end
+
+  def test_reduce_pushes_additive_and_deletes_substractions
+    reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new)
+    accumulator = TestAccumulator.new
+
+    assert_equal(0, reducer.flows.values.flatten.count)
+
+    reducer = reducer.reduce('Dev - Ready', accumulator)
+
+    assert_equal(2, reducer.flows['Dev - Ready'].values.flatten.count)
+
+    accumulator.additive = false
+    reducer = reducer.reduce('Dev - Ready', accumulator)
+
+    assert_equal(0, reducer.flows['Dev - Ready'].values.flatten.count)
+  end
+
+  def test_reduce_all_chains_self
+    reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new)
+    accumulator = TestAccumulator.new
+
+    result = reducer.reduce_all(['Backlog', 'Dev - Working'], [accumulator])
+
+    assert_instance_of(Jetmeter::FlowReducer, result)
+  end
+
+  def test_reduce_all_applies_all_flows_to_all_accumulators
+    reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new)
+
+    accumulator1 = Minitest::Mock.new
+    accumulator1.expect(:selector, Proc.new {}, ['Backlog'])
+    accumulator1.expect(:selector, Proc.new {}, ['Dev - Working'])
+
+    accumulator2 = Minitest::Mock.new
+    accumulator2.expect(:selector, Proc.new {}, ['Backlog'])
+    accumulator2.expect(:selector, Proc.new {}, ['Dev - Working'])
+
+    result = reducer.reduce_all(['Backlog', 'Dev - Working'], [accumulator1, accumulator2])
+
+    accumulator1.verify
+    accumulator2.verify
   end
 end
 
-class TestEventsLoader
-  def load
-    [
-      OpenStruct.new({
-        id: 100,
-        event: 'labeled',
-        label: { name: 'Backlog' },
-        issue: { number: 1 },
-        created_at: Date.iso8601('2017-05-11T10:51')
-      }),
-      OpenStruct.new({
-        id: 101,
-        event: 'unlabeled',
-        label: { name: 'Backlog' },
-        issue: { number: 2 },
-        created_at: Date.iso8601('2017-05-11T10:51')
-      }),
-      OpenStruct.new({
-        id: 102,
-        event: 'unlabeled',
-        label: { name: 'Backlog' },
-        issue: { number: 1 },
-        created_at: Date.iso8601('2017-05-11T11:22')
-      }),
-      OpenStruct.new({
-        id: 103,
-        event: 'labeled',
-        label: { name: 'Dev - Ready' },
-        issue: { number: 1 },
-        created_at: Date.iso8601('2017-05-11T11:23')
-      }),
-      OpenStruct.new({
-        id: 104,
-        event: 'unlabeled',
-        label: { name: 'Dev - Ready' },
-        issue: { number: 1 },
-        created_at: Date.iso8601('2017-05-11T11:22')
-      }),
-      OpenStruct.new({
-        id: 105,
-        event: 'labeled',
-        label: { name: 'Dev - Working' },
-        issue: { number: 1 },
-        created_at: Date.iso8601('2017-05-11T11:23')
-      })
-    ]
-  end
-end
+class TestAccumulator
+  attr_accessor :additive
 
-class TestAccomulator
-  def flow
-    'Dev - Ready'
+  def initialize
+    @additive = true
   end
 
-  def selector
-    ->(event) { event.label[:name] == 'Dev - Ready' }
-  end
-
-  def additive?
-    true
+  def selector(flow)
+    ->(event) { event.label[:name] == flow }
   end
 end
