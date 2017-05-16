@@ -5,21 +5,18 @@ module Jetmeter
     def initialize(config_path)
       @config = eval(File.read(config_path))
       authenticate_user
-      if !access_token_stored?
-        save_access_token(retrieve access_token)
-      end
     end
 
     def run
       events_loader = Jetmeter::RepositoryIssueEventsLoader.new(@config)
 
-      reducer = Jetmeter::FlowReducer.new(events_loader)
       accumulators = [
         Jetmeter::LabelAccumulator.new(events_loader, @config),
         Jetmeter::LabelAccumulator.new(events_loader, @config, additive: false),
         Jetmeter::CloseAccumulator.new(@config)
       ]
 
+      reducer = Jetmeter::FlowReducer.new(events_loader)
       reducer = reducer.reduce_all(@config.flows.keys, accumulators)
       File.open(@config.output_path, 'wb') do |file|
         Jetmeter::CsvFormatter.new(reducer.flows).save(file)
@@ -52,6 +49,11 @@ module Jetmeter
       [login, password]
     end
 
+    def ask_two_factor
+      puts 'Enter 2-factor authentication token:'
+      STDIN.gets.chomp
+    end
+
     def create_authorization
       auth_note = "jetmeter for #{ENV['USER']}@#{ENV['HOSTNAME']}}"
       @config.client.create_authorization(
@@ -59,13 +61,10 @@ module Jetmeter
         note: auth_note
       )
     rescue Octokit::OneTimePasswordRequired
-      puts 'Enter 2-factor authentication token:'
-      two_factor_token = STDIN.gets.chomp
-
       @config.client.create_authorization(
         scopes: [:repo],
         note: auth_note,
-        headers: { 'X-GitHub-OTP' => two_factor_token }
+        headers: { 'X-GitHub-OTP' => ask_two_factor }
       )
     end
 
@@ -80,10 +79,6 @@ module Jetmeter
 
     def access_token_readable?
       File.readable?(CREDENTIAL_PATH)
-    end
-
-    def access_token_writable?
-      File.writable?(CREDENTIAL_PATH)
     end
   end
 end
