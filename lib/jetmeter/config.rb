@@ -1,7 +1,7 @@
 module Jetmeter
   class Config
-    attr_writer :github_credentials
     attr_accessor :repository_name
+    attr_accessor :output_path
     attr_reader :flows
 
     def initialize(api: Octokit::Client)
@@ -11,6 +11,11 @@ module Jetmeter
       @flows = {}
 
       yield self
+    end
+
+    def github_credentials=(credentials)
+      @github_credentials = credentials
+      @_client = nil
     end
 
     def client

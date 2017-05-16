@@ -27,6 +27,14 @@ class Jetmeter::ConfigTest < Minitest::Test
     assert_equal('marchi-martius/jetmeter', config.repository_name)
   end
 
+  def test_configures_output_path
+    config = Jetmeter::Config.new do |c|
+      c.output_path = '/tmp/test.csv'
+    end
+
+    assert_equal('/tmp/test.csv', config.output_path)
+  end
+
   def test_registers_flows
     config = Jetmeter::Config.new do |c|
       c.register_flow 'Dev - Ready' do |f|

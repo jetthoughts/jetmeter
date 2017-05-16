@@ -1,15 +1,17 @@
 module Jetmeter
   class CLI
-    CREDENTIAL_PATH = File.expand('~/.jetmeter')
+    CREDENTIAL_PATH = File.expand_path('~/.jetmeter')
 
     def initialize(config_path)
       @config = eval(File.read(config_path))
-      @config.github_credentials = credentials
-      save_access_token unless access_token_stored?
+      authenticate_user
+      if !access_token_stored?
+        save_access_token(retrieve access_token)
+      end
     end
 
     def run
-      events_loader = Jetemeter::RepositoryIssueEventsLoader.new(@config)
+      events_loader = Jetmeter::RepositoryIssueEventsLoader.new(@config)
 
       reducer = Jetmeter::FlowReducer.new(events_loader)
       accumulators = [
@@ -22,37 +24,54 @@ module Jetmeter
       File.open(@config.output_path, 'wb') do |file|
         Jetmeter::CsvFormatter.new(reducer.flows).save(file)
       end
+
+      puts "Created CSV: #{@config.output_path}"
     end
 
     private
 
-    def credentials
+    def authenticate_user
       if access_token_stored? && access_token_readable?
-        { access_token: File.read(CREDENTIAL_PATH) }
+        @config.github_credentials = { access_token: File.read(CREDENTIAL_PATH) }
       else
-        username, password = ask_credentials
-        { usename: username, password: password }
+        login, password = ask_credentials
+        @config.github_credentials = { login: login, password: password }
+
+        authorization = create_authorization
+        save_access_token(authorization.token)
       end
     end
 
     def ask_credentials
-      puts "Your github username:"
-      username = gets
-      puts "Your github password:"
-      password = STDIN.noecho(&:gets)
+      puts "Your github login:"
+      login = STDIN.gets.chomp
 
-      [username, password]
+      puts "Your github password:"
+      password = STDIN.noecho(&:gets).chomp
+
+      [login, password]
     end
 
-    def save_access_token
-      if access_token_writable?
-        auth_note = "jetmeter for #{ENV['USER']}@#{ENV['HOSTNAME']}}"
-        authorization = @config.client.create_authorization(
-          scopes: [:repo],
-          note: auth_note
-        )
-        File.write(CREDENTIAL_PATH, authorization.hashed_token)
-      end
+    def create_authorization
+      auth_note = "jetmeter for #{ENV['USER']}@#{ENV['HOSTNAME']}}"
+      @config.client.create_authorization(
+        scopes: [:repo],
+        note: auth_note
+      )
+    rescue Octokit::OneTimePasswordRequired
+      puts 'Enter 2-factor authentication token:'
+      two_factor_token = STDIN.gets.chomp
+
+      @config.client.create_authorization(
+        scopes: [:repo],
+        note: auth_note,
+        headers: { 'X-GitHub-OTP' => two_factor_token }
+      )
+    end
+
+    def save_access_token(token)
+      File.write(CREDENTIAL_PATH, token)
+      @config.github_credentials = { access_token: token }
     end
 
     def access_token_stored?
