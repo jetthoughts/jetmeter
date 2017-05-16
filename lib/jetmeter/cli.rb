@@ -71,7 +71,7 @@ module Jetmeter
     end
 
     def create_authorization
-      auth_note = "jetmeter for #{ENV['USER']}@#{ENV['HOSTNAME']}}"
+      auth_note = "jetmeter for #{ENV['USER']}@#{ENV['HOSTNAME']}"
       @config.client.create_authorization(
         scopes: [:repo],
         note: auth_note
