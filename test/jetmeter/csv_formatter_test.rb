@@ -4,7 +4,7 @@ require 'jetmeter/csv_formatter'
 
 class Jetmeter::CsvFormatterTest < Minitest::Test
   def build_event(issue_number)
-    OpenStruct.new(issue: OpenStruct.new(number: issue_number))
+    issue_number
   end
 
   def test_builds_commulative_table

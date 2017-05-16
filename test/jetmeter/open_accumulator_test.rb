@@ -16,8 +16,11 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_selector_approves_opened_event_for_opening_flow
     accumulator = build_accumulator
     event = OpenStruct.new(
-      event: 'opened',
-      issue: { number: 1 }
+      type: 'IssuesEvent',
+      payload: {
+        action: 'opened',
+        issue: { number: 1 }
+      }
     )
 
     assert(accumulator.selector('Backlog').call(event))
@@ -26,8 +29,11 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_selector_declines_opened_event_for_regular_flow
     accumulator = build_accumulator(name: 'WIP', opening: false)
     event = OpenStruct.new(
-      event: 'opened',
-      issue: { number: 1 }
+      type: 'IssuesEvent',
+      payload: {
+        action: 'opened',
+        issue: { number: 1 }
+      }
     )
 
     refute(accumulator.selector('WIP').call(event))
@@ -36,8 +42,11 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_selector_declines_other_event
     accumulator = build_accumulator
     event = OpenStruct.new(
-      event: 'labeled',
-      issue: { number: 1 }
+      type: 'IssuesEvent',
+      payload: {
+        action: 'edited',
+        issue: { number: 1 }
+      }
     )
 
     refute(accumulator.selector('Backlog').call(event))

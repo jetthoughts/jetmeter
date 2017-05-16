@@ -3,10 +3,6 @@ module Jetmeter
     def initialize(flows)
       @flows = flows
       @commulative = Hash.new { |hash, flow| hash[flow] = 0 }
-
-      dates = @flows.values.map(&:keys).flatten
-      @start_date  = dates.min
-      @finish_date = dates.max
     end
 
     def save(io)
@@ -22,9 +18,12 @@ module Jetmeter
     end
 
     def render_rows(csv)
-      (@start_date..@finish_date).each do |date|
+      dates = @flows.values.map(&:keys).flatten
+      return if dates.empty?
+
+      (dates.min..dates.max).each do |date|
         @flows.keys.each do |flow|
-          events = @flows[flow].fetch(date, []).uniq { |e| e.issue[:number] }
+          events = @flows[flow].fetch(date, []).uniq
           @commulative[flow] += events.count
         end
         csv << [date.iso8601] + @commulative.values

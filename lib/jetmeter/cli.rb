@@ -8,19 +8,34 @@ module Jetmeter
     end
 
     def run
-      events_loader = Jetmeter::RepositoryIssueEventsLoader.new(@config)
+      repository_issue_events = Jetmeter::RepositoryIssueEventsLoader.new(@config)
+      repository_events = Jetmeter::RepositoryEventsLoader.new(@config)
 
-      accumulators = [
-        Jetmeter::LabelAccumulator.new(events_loader, @config),
-        Jetmeter::LabelAccumulator.new(events_loader, @config, additive: false),
-        Jetmeter::CloseAccumulator.new(@config)
+      issues_reducer = Jetmeter::FlowReducer.new(repository_issue_events)
+      repo_reducer = Jetmeter::FlowReducer.new(repository_events)
+
+      issue_accums = [
+        Jetmeter::LabelAccumulator.new(repository_issue_events, @config),
+        Jetmeter::LabelAccumulator.new(repository_issue_events, @config, additive: false),
+        Jetmeter::CloseAccumulator.new(@config),
+      ]
+      repo_accums = [
         Jetmeter::OpenAccumulator.new(@config)
       ]
 
-      reducer = Jetmeter::FlowReducer.new(events_loader)
-      reducer = reducer.reduce_all(@config.flows.keys, accumulators)
+      issues_reducer = issues_reducer.reduce_all(
+        @config.flows.keys,
+        issue_accums
+      )
+      repo_reducer = repo_reducer.reduce_all(
+        @config.flows.keys,
+        repo_accums
+      )
+
+      combined_reducer = issues_reducer.merge(repo_reducer)
+
       File.open(@config.output_path, 'wb') do |file|
-        Jetmeter::CsvFormatter.new(reducer.flows).save(file)
+        Jetmeter::CsvFormatter.new(combined_reducer.flows).save(file)
       end
 
       puts "Created CSV: #{@config.output_path}"

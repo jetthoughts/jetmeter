@@ -78,6 +78,20 @@ class Jetmeter::FlowReducerTest < Minitest::Test
     accumulator1.verify
     accumulator2.verify
   end
+
+  def test_merge_joins_flows
+    first = Jetmeter::FlowReducer.new(TestEventsLoader.new)
+    second = Jetmeter::FlowReducer.new(TestEventsLoader.new)
+    accumulator = TestAccumulator.new
+
+    first.reduce('Backlog', accumulator)
+    first.reduce('Dev - Ready', accumulator)
+    second.reduce('Backlog', accumulator)
+
+    first.merge(second)
+
+    assert_equal(6, first.flows['Backlog'][Date.new(2017, 5, 11)].count)
+  end
 end
 
 class TestAccumulator
