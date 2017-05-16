@@ -30,7 +30,7 @@ class Jetmeter::CsvFormatterTest < Minitest::Test
     }
     io = StringIO.new('', 'wb')
 
-    formatter = Jetmeter::CsvFormatter.new(flows).save(io)
+    Jetmeter::CsvFormatter.new(flows).save(io)
     rows = CSV.parse(io.string)
 
     assert_equal(['Date',       'Backlog', 'Ready', 'WIP', 'Closed'], rows[0])

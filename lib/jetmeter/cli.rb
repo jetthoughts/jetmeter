@@ -14,6 +14,7 @@ module Jetmeter
         Jetmeter::LabelAccumulator.new(events_loader, @config),
         Jetmeter::LabelAccumulator.new(events_loader, @config, additive: false),
         Jetmeter::CloseAccumulator.new(@config)
+        Jetmeter::OpenAccumulator.new(@config)
       ]
 
       reducer = Jetmeter::FlowReducer.new(events_loader)

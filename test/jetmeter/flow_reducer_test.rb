@@ -73,7 +73,7 @@ class Jetmeter::FlowReducerTest < Minitest::Test
     accumulator2.expect(:selector, Proc.new {}, ['Backlog'])
     accumulator2.expect(:selector, Proc.new {}, ['Dev - Working'])
 
-    result = reducer.reduce_all(['Backlog', 'Dev - Working'], [accumulator1, accumulator2])
+    reducer.reduce_all(['Backlog', 'Dev - Working'], [accumulator1, accumulator2])
 
     accumulator1.verify
     accumulator2.verify

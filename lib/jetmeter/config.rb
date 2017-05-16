@@ -30,6 +30,10 @@ module Jetmeter
       @flows[flow_name] = Jetmeter::Config::Flow.new.tap(&block)
     end
 
+    def register_opening_flow(flow_name)
+      @flows[flow_name] = Jetmeter::Config::Flow.new(opening: true)
+    end
+
     def register_closing_flow(flow_name, &block)
       if block_given?
         @flows[flow_name] = Jetmeter::Config::Flow.new(closing: true).tap(&block)
