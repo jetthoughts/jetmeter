@@ -64,22 +64,6 @@ class Jetmeter::ConfigTest < Minitest::Test
     assert_equal(['Dev - Ready'], config.flows['WIP'].substractions['Dev - Working'])
   end
 
-  def test_register_opening_flow
-    config = Jetmeter::Config.new do |c|
-      c.register_opening_flow 'Backlog'
-    end
-
-    assert(config.flows['Backlog'].opening?)
-  end
-
-  def test_register_closing_flow
-    config = Jetmeter::Config.new do |c|
-      c.register_closing_flow 'Closed'
-    end
-
-    assert(config.flows['Closed'].closing?)
-  end
-
   def test_raises_error_if_no_block_passed
     assert_raises(ArgumentError) { Jetmeter::Config.new }
   end

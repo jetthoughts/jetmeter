@@ -1,9 +1,12 @@
 require 'minitest/autorun'
 require 'jetmeter/open_accumulator'
 
+require_relative 'test_flow'
+
 class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def build_accumulator(name: 'Backlog', opening: true)
-    config = OpenStruct.new(flows: { name => OpenStruct.new(opening?: opening) })
+    flow = TestFlow.new(additions: { nil => opening ? [:opened] : [] })
+    config = OpenStruct.new(flows: { name => flow })
     Jetmeter::OpenAccumulator.new(config)
   end
 

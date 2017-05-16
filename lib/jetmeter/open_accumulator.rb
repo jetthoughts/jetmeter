@@ -11,12 +11,22 @@ module Jetmeter
       lambda do |event|
         event.type == ISSUES_EVENT_TYPE &&
           event.payload[:action] == OPENED_ACTION &&
-          @flows[flow_name]&.opening?
+          opening_transition?(@flows[flow_name])
       end
     end
 
     def additive
       true
+    end
+
+    private
+
+    def opening_transition?(flow)
+      if flow
+        flow.transitions(additive).any? do |from, to|
+          from.nil? && to.include?(:opened)
+        end
+      end
     end
   end
 end

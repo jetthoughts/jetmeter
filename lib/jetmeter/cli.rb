@@ -18,6 +18,8 @@ module Jetmeter
         Jetmeter::LabelAccumulator.new(repository_issue_events, @config),
         Jetmeter::LabelAccumulator.new(repository_issue_events, @config, additive: false),
         Jetmeter::CloseAccumulator.new(@config),
+        Jetmeter::CloseAccumulator.new(@config, additive: false),
+        Jetmeter::MergeAccomulator.new(@config)
       ]
       repo_accums = [
         Jetmeter::OpenAccumulator.new(@config)

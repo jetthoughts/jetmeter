@@ -2,11 +2,12 @@ require 'minitest/autorun'
 require 'jetmeter/label_accumulator'
 
 require_relative 'test_events_loader'
+require_relative 'test_flow'
 
 class Jetmeter::LabelAccumulatorTest < Minitest::Test
   def build_accumulator(name: 'Backlog', from: nil, to: 'Backlog', additive: true)
     events_loader = TestEventsLoader.new
-    flow          = OpenStruct.new(additions: { from => [to] })
+    flow          = TestFlow.new(additions: { from => [to] })
     config        = OpenStruct.new(flows: { name => flow })
 
     Jetmeter::LabelAccumulator.new(events_loader, config, additive: additive)
@@ -102,7 +103,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
 
   def test_non_additive_selector_approves_substriction_transitions
     events_loader = TestEventsLoader.new
-    flow          = OpenStruct.new(substractions: { 'Dev - Working' => ['Dev - Ready'] })
+    flow          = TestFlow.new(substractions: { 'Dev - Working' => ['Dev - Ready'] })
     config        = OpenStruct.new(flows: { 'Dev - Working' => flow })
     accumulator   = Jetmeter::LabelAccumulator.new(events_loader, config, additive: false)
 

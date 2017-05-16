@@ -4,11 +4,10 @@ module Jetmeter
       attr_reader :additions
       attr_reader :substractions
 
-      def initialize(opening: false, closing: false)
+      def initialize
         @additions = Hash.new { |hash, key| hash[key] = [] }
         @substractions = Hash.new { |hash, key| hash[key] = [] }
-        @opening = opening
-        @closing = closing
+        @opening = @closing = @merging = false
       end
 
       def register_addition(hash)
@@ -23,12 +22,8 @@ module Jetmeter
         end
       end
 
-      def opening?
-        !!@opening
-      end
-
-      def closing?
-        !!@closing
+      def transitions(additive)
+        additive ? additions : substractions
       end
     end
   end

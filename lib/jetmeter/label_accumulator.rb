@@ -14,32 +14,33 @@ module Jetmeter
 
     def selector(flow_name)
       lambda do |event|
-        break false if event.event != event_name
-        break false unless flow = @flows[flow_name]
-
-        transitions(flow).any? do |from, to|
-          Array(to).include?(event.label[:name]) && from.nil? || corresponding_event?(event, from)
-        end
+        @flows.key?(flow_name) &&
+          labeling_transition?(@flows[flow_name], event) ||
+          unlabeling_transition?(@flows[flow_name], event)
       end
     end
 
     private
 
-    def event_name
-      LABELED_EVENT
+    def labeling_transition?(flow, event)
+      if event.event == LABELED_EVENT
+        flow.transitions(additive).any? do |from, to|
+          to.include?(event.label[:name]) && from.nil? || corresponding_event?(event, from)
+        end
+      end
     end
 
-    def corresponding_event_name
-      UNLABELED_EVENT
-    end
-
-    def transitions(flow)
-      additive ? flow.additions : flow.substractions
+    def unlabeling_transition?(flow, event)
+      if event.event == UNLABELED_EVENT
+        flow.transitions(additive).any? do |from, to|
+          to.nil? && event.label[:name] == from
+        end
+      end
     end
 
     def corresponding_events
       @_corresponding_events ||= @events_loader.load.select do |e|
-        e.event == corresponding_event_name
+        e.event == UNLABELED_EVENT
       end
     end
 

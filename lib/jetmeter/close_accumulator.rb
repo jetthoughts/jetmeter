@@ -1,20 +1,28 @@
 module Jetmeter
   class CloseAccumulator
-    CLOSING_EVENTS = [
-      CLOSED_EVENT = 'closed'.freeze,
-      MERGED_EVENT = 'merged'.freeze
-    ]
+    CLOSED_EVENT = 'closed'.freeze
 
-    def initialize(config)
+    attr_reader :additive
+
+    def initialize(config, additive: true)
       @flows = config.flows
+      @additive = additive
     end
 
     def selector(flow_name)
-      ->(event) { CLOSING_EVENTS.include?(event.event) && @flows[flow_name]&.closing? }
+      lambda do |event|
+        event.event == CLOSED_EVENT && closing_transition?(@flows[flow_name])
+      end
     end
 
-    def additive
-      true
+    private
+
+    def closing_transition?(flow)
+      if flow
+        flow.transitions(additive).any? do |from, to|
+          from.nil? && to.include?(:closed)
+        end
+      end
     end
   end
 end
