@@ -32,10 +32,12 @@ module Jetmeter
         repo_accums
       )
 
-      combined_reducer = issues_reducer.merge(repo_reducer)
+      formatter = Jetmeter::CsvFormatter.new(
+        issues_reducer.merge(repo_reducer).flows
+      )
 
       File.open(@config.output_path, 'wb') do |file|
-        Jetmeter::CsvFormatter.new(combined_reducer.flows).save(file)
+        formatter.save(file)
       end
 
       puts "Created CSV: #{@config.output_path}"
