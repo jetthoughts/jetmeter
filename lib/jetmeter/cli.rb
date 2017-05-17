@@ -24,9 +24,12 @@ module Jetmeter
       repo_accums = [
         Jetmeter::OpenAccumulator.new
       ]
+      filters = [
+        Jetmeter::DateFilter.new
+      ]
 
-      issues_reducer.reduce(issue_accums, [])
-      repo_reducer.reduce(repo_accums, [])
+      issues_reducer.reduce(issue_accums, filters)
+      repo_reducer.reduce(repo_accums, filters)
 
       formatter = Jetmeter::CsvFormatter.new(
         issues_reducer.merge(repo_reducer).flows
