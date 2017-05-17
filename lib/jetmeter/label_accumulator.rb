@@ -2,16 +2,19 @@ module Jetmeter
   class LabelAccumulator
     LABELED_EVENT = 'labeled'.freeze
     UNLABELED_EVENT = 'unlabeled'.freeze
-    MAX_LABEL_CHANGE_TIME = 60.freeze
+    CORRESPONDING_EVENTS_LIMIT = 15
+    MAX_LABEL_CHANGE_TIME = 60
 
     attr_reader :additive
 
-    def initialize(events_loader, additive: true)
-      @events_loader = events_loader
+    def initialize(additive: true)
+      @corresponding_events = { LABELED_EVENT => [], UNLABELED_EVENT => [] }
       @additive = additive
     end
 
     def valid?(event, flow)
+      store_corresponding_event(event)
+
       labeling_transition?(flow, event) || unlabeling_transition?(flow, event)
     end
 
@@ -28,20 +31,25 @@ module Jetmeter
     def unlabeling_transition?(flow, event)
       if event.event == UNLABELED_EVENT
         flow.transitions(additive).any? do |from, to|
-          to.nil? && event.label[:name] == from
+          from == event.label[:name] && to.any? { |label| label.nil? || corresponding_event?(event, label) }
         end
       end
     end
 
-    def corresponding_events
-      @_corresponding_events ||= @events_loader.load.select do |e|
-        e.event == UNLABELED_EVENT
+    def store_corresponding_event(event)
+      return unless [LABELED_EVENT, UNLABELED_EVENT].include?(event.event)
+
+      @corresponding_events[event.event].push(event)
+      if @corresponding_events[event.event].length > CORRESPONDING_EVENTS_LIMIT
+        @corresponding_events[event.event].shift
       end
     end
 
-    def corresponding_event?(event, from)
-      corresponding_events.any? do |corresponding|
-        corresponding.label[:name] == from &&
+    def corresponding_event?(event, label)
+      corresponding_type = event.event == LABELED_EVENT ? UNLABELED_EVENT : LABELED_EVENT
+
+      @corresponding_events[corresponding_type].any? do |corresponding|
+        corresponding.label[:name] == label &&
           corresponding.issue[:number] == event.issue[:number] &&
           (corresponding.created_at.to_time - event.created_at.to_time).abs < MAX_LABEL_CHANGE_TIME
       end

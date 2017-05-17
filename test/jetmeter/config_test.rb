@@ -64,6 +64,29 @@ class Jetmeter::ConfigTest < Minitest::Test
     assert_equal(['Dev - Ready'], config.flows['WIP'].substractions['Dev - Working'])
   end
 
+  def test_registers_flow_with_filters
+    config = Jetmeter::Config.new do |c|
+      c.register_flow 'WIP' do |f|
+        f.filters[:start_at] = Date.new(2017, 4, 10)
+      end
+    end
+
+    assert_equal(Date.new(2017, 4, 10), config.flows['WIP'].filters[:start_at])
+  end
+
+  def test_register_flow_without_filters
+    config = Jetmeter::Config.new do |c|
+      c.register_flow 'Backlog' do |f|
+      end
+
+      c.register_flow 'WIP' do |f|
+        f.filters[:start_at] = Date.new(2017, 4, 10)
+      end
+    end
+
+    assert(config.flows['Backlog'].filters.empty?)
+  end
+
   def test_raises_error_if_no_block_passed
     assert_raises(ArgumentError) { Jetmeter::Config.new }
   end

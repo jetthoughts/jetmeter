@@ -1,9 +1,10 @@
 module Jetmeter
   class CsvFormatter
-    def initialize(flows)
-      @flows = flows
+    def initialize(config, reducer)
+      @config = config
+      @reducer = reducer
       @commulative = Hash.new { |hash, flow| hash[flow] = 0 }
-      @dates = @flows.values.map(&:keys).flatten
+      @dates = @reducer.flows.values.map(&:keys).flatten
     end
 
     def save(io)
@@ -15,16 +16,16 @@ module Jetmeter
     private
 
     def render_header(csv)
-      csv << ['Date'] + @flows.keys
+      csv << ['Date'] + @config.flows.keys
     end
 
     def render_rows(csv)
       return if @dates.empty?
 
       (@dates.min..@dates.max).each do |date|
-        @flows.each do |flow, dates|
-          events = dates.fetch(date, []).uniq
-          @commulative[flow] += events.count
+        @config.flows.keys.each do |flow_name|
+          events = @reducer.flows[flow_name].fetch(date, []).uniq
+          @commulative[flow_name] += events.length
         end
         csv << [date.iso8601] + @commulative.values
       end

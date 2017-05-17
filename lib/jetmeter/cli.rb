@@ -11,30 +11,31 @@ module Jetmeter
       repository_issue_events = Jetmeter::RepositoryIssueEventsLoader.new(@config)
       repository_events = Jetmeter::RepositoryEventsLoader.new(@config)
 
-      issues_reducer = Jetmeter::FlowReducer.new(repository_issue_events, @config)
-      repo_reducer = Jetmeter::FlowReducer.new(repository_events, @config)
-
-      issue_accums = [
-        Jetmeter::LabelAccumulator.new(repository_issue_events),
-        Jetmeter::LabelAccumulator.new(repository_issue_events, additive: false),
+      accums = [
+        Jetmeter::LabelAccumulator.new,
+        Jetmeter::LabelAccumulator.new(additive: false),
         Jetmeter::CloseAccumulator.new,
         Jetmeter::CloseAccumulator.new(additive: false),
-        Jetmeter::MergeAccomulator.new
-      ]
-      repo_accums = [
+        Jetmeter::MergeAccumulator.new,
         Jetmeter::OpenAccumulator.new
       ]
       filters = [
         Jetmeter::DateFilter.new
       ]
 
-      issues_reducer.reduce(issue_accums, filters)
-      repo_reducer.reduce(repo_accums, filters)
-
-      formatter = Jetmeter::CsvFormatter.new(
-        issues_reducer.merge(repo_reducer).flows
+      puts "Fetching events..."
+      reducer = Jetmeter::FlowReducer.new(
+        [repository_events, repository_issue_events],
+        @config
       )
 
+      puts "Reducing events..."
+      reducer.reduce(accums, filters)
+
+      puts "Merging events"
+      formatter = Jetmeter::CsvFormatter.new(@config, reducer)
+
+      puts "Saving CSV file..."
       File.open(@config.output_path, 'wb') do |file|
         formatter.save(file)
       end

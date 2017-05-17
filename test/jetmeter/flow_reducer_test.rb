@@ -57,7 +57,7 @@ class Jetmeter::FlowReducerTest < Minitest::Test
     assert_equal(0, @reducer.flows['Dev - Ready'].values.flatten.count)
   end
 
-  def test_merge_joins_flows
+  def test_merge_joins_flows_when_first_has_older_events
     first = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
     second = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
     backlog_accumulator = TestAccumulator.new('Backlog')
@@ -69,6 +69,21 @@ class Jetmeter::FlowReducerTest < Minitest::Test
     first.merge(second)
 
     assert_equal(7, first.flows['Backlog'][Date.new(2017, 5, 11)].count)
+  end
+
+  def test_merge_joins_flows_when_second_has_older_events
+    first = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
+    second = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
+
+    backlog_accumulator = TestAccumulator.new('Backlog')
+    wip_accumulator = TestAccumulator.new('Dev - Working')
+
+    first.reduce([wip_accumulator], [])
+    second.reduce([backlog_accumulator, wip_accumulator], [])
+
+    first.merge(second)
+
+    refute(first.flows['Backlog'][Date.new(2017, 5, 11)].empty?)
   end
 end
 

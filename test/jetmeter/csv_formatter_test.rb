@@ -3,48 +3,49 @@ require 'csv'
 require 'jetmeter/csv_formatter'
 
 class Jetmeter::CsvFormatterTest < Minitest::Test
-  def build_event(issue_number)
-    issue_number
-  end
-
   def test_builds_commulative_table
     flows = {
       'Backlog' => {
-        Date.new(2017, 5, 9) => [build_event(1), build_event(2), build_event(3)],
-        Date.new(2017, 5, 12) => [build_event(4), build_event(5)],
-        Date.new(2017, 6, 1) => [build_event(6)]
+        Date.new(2017, 4, 9)  => [1, 2, 3],
+        Date.new(2017, 4, 10) => [4, 5, 6, 7],
+        Date.new(2017, 4, 12) => [8, 9],
+        Date.new(2017, 5, 12) => [10, 11, 12],
+        Date.new(2017, 6, 1)  => [13]
       },
       'Ready' => {
-        Date.new(2017, 5, 9) => [build_event(1), build_event(2)],
-        Date.new(2017, 5, 10) => [build_event(3)]
+        Date.new(2017, 5, 9)  => [1, 2],
+        Date.new(2017, 5, 10) => [3]
       },
       'WIP' => {
-        Date.new(2017, 5, 10) => [build_event(1)],
-        Date.new(2017, 5, 19) => [build_event(2)],
-        Date.new(2017, 6, 1) => [build_event(3)]
+        Date.new(2017, 5, 10) => [1],
+        Date.new(2017, 5, 19) => [2],
+        Date.new(2017, 6, 1)  => [3]
       },
       'Closed' => {
-        Date.new(2017, 5, 22) => [build_event(2)],
-        Date.new(2017, 6, 5) => [build_event(1)]
+        Date.new(2017, 5, 22) => [2],
+        Date.new(2017, 6, 5)  => [1]
       }
     }
-    io = StringIO.new('', 'wb')
 
-    Jetmeter::CsvFormatter.new(flows).save(io)
+    config = OpenStruct.new(flows: flows)
+    reducer = OpenStruct.new(flows: flows)
+
+    io = StringIO.new('', 'wb')
+    Jetmeter::CsvFormatter.new(config, reducer).save(io)
     rows = CSV.parse(io.string)
 
     assert_equal(['Date',       'Backlog', 'Ready', 'WIP', 'Closed'], rows[0])
-    assert_equal(['2017-05-09', '3',       '2',     '0',   '0'     ], rows[1])
-    assert_equal(['2017-05-10', '3',       '3',     '1',   '0'     ], rows[2])
+    assert_equal(['2017-05-08', '9',       '0',     '0',   '0'     ], rows[30])
+    assert_equal(['2017-05-09', '9',       '2',     '0',   '0'     ], rows[31])
     # ...
-    assert_equal(['2017-05-12', '5',       '3',     '1',   '0'     ], rows[4])
+    assert_equal(['2017-05-12', '12',      '3',     '1',   '0'     ], rows[34])
     # ...
-    assert_equal(['2017-05-19', '5',       '3',     '2',   '0'     ], rows[11])
+    assert_equal(['2017-05-19', '12',       '3',     '2',   '0'     ], rows[41])
     # ...
-    assert_equal(['2017-05-22', '5',       '3',     '2',   '1'     ], rows[14])
+    assert_equal(['2017-05-22', '12',       '3',     '2',   '1'     ], rows[44])
     # ...
-    assert_equal(['2017-06-01', '6',       '3',     '3',   '1'     ], rows[24])
+    assert_equal(['2017-06-01', '13',       '3',     '3',   '1'     ], rows[54])
     # ...
-    assert_equal(['2017-06-05', '6',       '3',     '3',   '2'     ], rows[28])
+    assert_equal(['2017-06-05', '13',       '3',     '3',   '2'     ], rows[58])
   end
 end

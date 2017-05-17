@@ -2,8 +2,8 @@ module Jetmeter
   class FlowReducer
     attr_reader :flows
 
-    def initialize(events_loader, config)
-      @events = events_loader.load
+    def initialize(events_loaders, config)
+      @events = Array(events_loaders).inject([]) { |events, loader| events + loader.load }
       @config = config
       @flows = Hash.new do |hash, flow_name|
         hash[flow_name] = Hash.new { |flow, date| flow[date] = [] }

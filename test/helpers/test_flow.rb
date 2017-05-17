@@ -1,5 +1,5 @@
 class TestFlow < OpenStruct
   def transitions(additive)
-    Array(additive ? additions : substractions)
+    additive ? additions : substractions
   end
 end
