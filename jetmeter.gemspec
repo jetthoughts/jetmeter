@@ -15,8 +15,8 @@ Gem::Specification.new do |s|
 
   s.executables << 'jetmeter'
 
-  s.add_runtime_dependency 'octokit', ['~> 4.7.0']
+  s.add_runtime_dependency 'octokit', ['~> 4.7']
 
-  s.add_development_dependency 'rake', ['~> 12.0.0']
-  s.add_development_dependency 'minitest', ['~> 5.10.2']
+  s.add_development_dependency 'rake', ['~> 12.0']
+  s.add_development_dependency 'minitest', ['~> 5.10', '>= 5.10.2']
 end
