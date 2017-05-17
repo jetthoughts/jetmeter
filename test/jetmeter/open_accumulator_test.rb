@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'jetmeter/open_accumulator'
 
-require_relative 'test_flow'
+require_relative '../helpers/test_flow'
 
 class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def build_flow(name: 'Backlog', opening: true)

@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'jetmeter/merge_accumulator'
 
-require_relative 'test_flow'
+require_relative '../helpers/test_flow'
 
 class Jetmeter::MergeAccumulatorTest < Minitest::Test
   def build_flow(name: 'Closed', merging: true)

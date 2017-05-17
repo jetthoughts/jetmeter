@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'jetmeter/close_accumulator'
 
-require_relative 'test_flow'
+require_relative '../helpers/test_flow'
 
 class Jetmeter::CloseAccumulatorTest < Minitest::Test
   def build_flow(closing: true)

@@ -1,8 +1,8 @@
 require 'minitest/autorun'
 require 'jetmeter/label_accumulator'
 
-require_relative 'test_events_loader'
-require_relative 'test_flow'
+require_relative '../helpers/test_events_loader'
+require_relative '../helpers/test_flow'
 
 class Jetmeter::LabelAccumulatorTest < Minitest::Test
   def build_flow(from: nil, to: 'Backlog')

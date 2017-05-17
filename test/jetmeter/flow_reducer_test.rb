@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'jetmeter/flow_reducer'
 
-require_relative 'test_events_loader'
+require_relative '../helpers/test_events_loader'
 
 class Jetmeter::FlowReducerTest < Minitest::Test
   def build_flow_config
