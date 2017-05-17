@@ -19,4 +19,12 @@ class Jetmeter::Config::FlowTest < Minitest::Test
 
     assert_equal(['Dev - Ready', 'Dev - Working'], flow.transitions(false)['Backlog'])
   end
+
+  def test_stores_start_at_filter
+    flow = Jetmeter::Config::Flow.new
+
+    flow.filters[:start_at] = Time.new(2017, 5, 11)
+
+    assert_equal(Time.new(2017, 5, 11), flow.filters[:start_at])
+  end
 end

@@ -3,11 +3,12 @@ module Jetmeter
     class Flow
       attr_reader :additions
       attr_reader :substractions
+      attr_accessor :filters
 
       def initialize
         @additions = Hash.new { |hash, key| hash[key] = [] }
         @substractions = Hash.new { |hash, key| hash[key] = [] }
-        @opening = @closing = @merging = false
+        @filters = {}
       end
 
       def register_addition(hash)
