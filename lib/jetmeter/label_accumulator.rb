@@ -6,18 +6,13 @@ module Jetmeter
 
     attr_reader :additive
 
-    def initialize(events_loader, config, additive: true)
+    def initialize(events_loader, additive: true)
       @events_loader = events_loader
-      @flows = config.flows
       @additive = additive
     end
 
-    def selector(flow_name)
-      lambda do |event|
-        @flows.key?(flow_name) &&
-          labeling_transition?(@flows[flow_name], event) ||
-          unlabeling_transition?(@flows[flow_name], event)
-      end
+    def valid?(event, flow)
+      labeling_transition?(flow, event) || unlabeling_transition?(flow, event)
     end
 
     private

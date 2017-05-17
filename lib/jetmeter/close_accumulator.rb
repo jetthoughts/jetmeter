@@ -4,24 +4,19 @@ module Jetmeter
 
     attr_reader :additive
 
-    def initialize(config, additive: true)
-      @flows = config.flows
+    def initialize(additive: true)
       @additive = additive
     end
 
-    def selector(flow_name)
-      lambda do |event|
-        event.event == CLOSED_EVENT && closing_transition?(@flows[flow_name])
-      end
+    def valid?(event, flow)
+      event.event == CLOSED_EVENT && closing_transition?(flow)
     end
 
     private
 
     def closing_transition?(flow)
-      if flow
-        flow.transitions(additive).any? do |from, to|
-          from.nil? && to.include?(:closed)
-        end
+      flow.transitions(additive).any? do |from, to|
+        from.nil? && to.include?(:closed)
       end
     end
   end

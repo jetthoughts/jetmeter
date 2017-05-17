@@ -4,45 +4,39 @@ require 'jetmeter/merge_accumulator'
 require_relative 'test_flow'
 
 class Jetmeter::MergeAccumulatorTest < Minitest::Test
-  def build_accumulator(name: 'Closed', merging: true)
-    flow = TestFlow.new(additions: { nil => merging ? [:merged] : [] })
-    config = OpenStruct.new(flows: { name => flow })
-    Jetmeter::MergeAccumulator.new(config)
+  def build_flow(name: 'Closed', merging: true)
+    TestFlow.new(additions: { nil => merging ? [:merged] : [] })
   end
 
-  def test_selector_returns_closure
-    accumulator = build_accumulator
-
-    assert_kind_of(Proc, accumulator.selector('Closed'))
+  def build_accumulator
+    Jetmeter::MergeAccumulator.new
   end
 
   def test_selector_approves_merged_event_for_merging_flow
-    accumulator = build_accumulator
     event = OpenStruct.new(
       event: 'merged',
       issue: { number: 1 }
     )
 
-    assert(accumulator.selector('Closed').call(event))
+    assert(build_accumulator.valid?(event, build_flow))
   end
 
   def test_selector_declies_merged_event_for_regular_flow
-    accumulator = build_accumulator(name: 'WIP', merging: false)
+    flow = build_flow(name: 'WIP', merging: false)
     event = OpenStruct.new(
       event: 'merged',
       issue: { number: 1 }
     )
 
-    refute(accumulator.selector('WIP').call(event))
+    refute(build_accumulator.valid?(event, flow))
   end
 
   def test_selector_declines_other_event
-    accumulator = build_accumulator
     event = OpenStruct.new(
       event: 'labeled',
       issue: { number: 1 }
     )
 
-    refute(accumulator.selector('Closed').call(event))
+    refute(build_accumulator.valid?(event, build_flow))
   end
 end

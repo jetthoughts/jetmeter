@@ -4,45 +4,37 @@ require 'jetmeter/close_accumulator'
 require_relative 'test_flow'
 
 class Jetmeter::CloseAccumulatorTest < Minitest::Test
-  def build_accumulator(name: 'Closed', closing: true)
-    flow = TestFlow.new(additions: { nil => closing ? [:closed] : [] })
-    config = OpenStruct.new(flows: { name => flow })
-    Jetmeter::CloseAccumulator.new(config)
+  def build_flow(closing: true)
+    TestFlow.new(additions: { nil => closing ? [:closed] : [] })
   end
 
-  def test_selector_returns_closure
-    accumulator = build_accumulator
-
-    assert_kind_of(Proc, accumulator.selector('Closed'))
-  end
-
-  def test_selector_approves_closed_event_for_closing_flow
-    accumulator = build_accumulator
+  def test_valid_approves_closed_event_for_closing_flow
+    accumulator = Jetmeter::CloseAccumulator.new
     event = OpenStruct.new(
       event: 'closed',
       issue: { number: 1 }
     )
 
-    assert(accumulator.selector('Closed').call(event))
+    assert(accumulator.valid?(event, build_flow))
   end
 
-  def test_selector_declies_close_event_for_regular_flow
-    accumulator = build_accumulator(name: 'WIP', closing: false)
+  def test_valid_declies_close_event_for_regular_flow
+    accumulator = Jetmeter::CloseAccumulator.new
     event = OpenStruct.new(
       event: 'closed',
       issue: { number: 1 }
     )
 
-    refute(accumulator.selector('WIP').call(event))
+    refute(accumulator.valid?(event, build_flow(closing: false)))
   end
 
-  def test_selector_declines_other_event
-    accumulator = build_accumulator
+  def test_valid_declines_other_event
+    accumulator = Jetmeter::CloseAccumulator.new
     event = OpenStruct.new(
       event: 'labeled',
       issue: { number: 1 }
     )
 
-    refute(accumulator.selector('Closed').call(event))
+    refute(accumulator.valid?(event, build_flow))
   end
 end

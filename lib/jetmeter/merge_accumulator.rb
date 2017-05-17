@@ -2,14 +2,8 @@ module Jetmeter
   class MergeAccumulator
     MERGED_EVENT = 'merged'.freeze
 
-    def initialize(config)
-      @flows = config.flows
-    end
-
-    def selector(flow_name)
-      lambda do |event|
-        event.event == MERGED_EVENT && merging_transition?(@flows[flow_name])
-      end
+    def valid?(event, flow)
+      event.event == MERGED_EVENT && merging_transition?(flow)
     end
 
     def additive
@@ -19,10 +13,8 @@ module Jetmeter
     private
 
     def merging_transition?(flow)
-      if flow
-        flow.transitions(additive).any? do |from, to|
-          from.nil? && to.include?(:merged)
-        end
+      flow.transitions(additive).any? do |from, to|
+        from.nil? && to.include?(:merged)
       end
     end
   end
