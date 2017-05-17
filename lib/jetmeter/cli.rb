@@ -11,28 +11,22 @@ module Jetmeter
       repository_issue_events = Jetmeter::RepositoryIssueEventsLoader.new(@config)
       repository_events = Jetmeter::RepositoryEventsLoader.new(@config)
 
-      issues_reducer = Jetmeter::FlowReducer.new(repository_issue_events)
-      repo_reducer = Jetmeter::FlowReducer.new(repository_events)
+      issues_reducer = Jetmeter::FlowReducer.new(repository_issue_events, @config)
+      repo_reducer = Jetmeter::FlowReducer.new(repository_events, @config)
 
       issue_accums = [
-        Jetmeter::LabelAccumulator.new(repository_issue_events, @config),
-        Jetmeter::LabelAccumulator.new(repository_issue_events, @config, additive: false),
-        Jetmeter::CloseAccumulator.new(@config),
-        Jetmeter::CloseAccumulator.new(@config, additive: false),
-        Jetmeter::MergeAccomulator.new(@config)
+        Jetmeter::LabelAccumulator.new(repository_issue_events),
+        Jetmeter::LabelAccumulator.new(repository_issue_events, additive: false),
+        Jetmeter::CloseAccumulator.new,
+        Jetmeter::CloseAccumulator.new(additive: false),
+        Jetmeter::MergeAccomulator.new
       ]
       repo_accums = [
-        Jetmeter::OpenAccumulator.new(@config)
+        Jetmeter::OpenAccumulator.new
       ]
 
-      issues_reducer = issues_reducer.reduce_all(
-        @config.flows.keys,
-        issue_accums
-      )
-      repo_reducer = repo_reducer.reduce_all(
-        @config.flows.keys,
-        repo_accums
-      )
+      issues_reducer.reduce(issue_accums, [])
+      repo_reducer.reduce(repo_accums, [])
 
       formatter = Jetmeter::CsvFormatter.new(
         issues_reducer.merge(repo_reducer).flows

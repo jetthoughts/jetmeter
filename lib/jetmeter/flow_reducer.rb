@@ -22,6 +22,7 @@ module Jetmeter
           our_events + their_events
         end
       end
+      self
     end
 
     private
