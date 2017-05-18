@@ -3,13 +3,9 @@ require 'jetmeter/open_accumulator'
 
 require_relative '../helpers/test_flow'
 
-class TestIssue < OpenStruct
+class TestIssue < SimpleDelegator
   def issue?
     true
-  end
-
-  def fields
-    Set.new(to_h.keys.map(&:to_sym))
   end
 end
 

@@ -22,4 +22,10 @@ class IssueAdapterTest < Minitest::Test
     adapter = Jetmeter::IssueAdapter.new(resource)
     assert_equal(345, adapter.issue_number)
   end
+
+  def test_delegates_fields_to_self
+    resource = OpenStruct.new(fields: Set.new([:foo, :bar, :baz]))
+    adapter = Jetmeter::IssueAdapter.new(resource)
+    assert_equal(Set.new([:foo, :bar, :baz]), adapter.fields)
+  end
 end

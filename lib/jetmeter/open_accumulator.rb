@@ -3,7 +3,7 @@ module Jetmeter
     def valid?(resource, flow)
       resource.issue? &&
         opening_transition?(flow) &&
-        working?(resource)
+        open_or_finished?(resource)
     end
 
     def additive
@@ -20,8 +20,8 @@ module Jetmeter
       end
     end
 
-    def working?(issue)
-      !issue.fields.include?(:pull_request) || issue[:closed_at].nil?
+    def open_or_finished?(issue)
+      issue[:closed_at].nil? || issue.key?(:pull_request)
     end
   end
 end
