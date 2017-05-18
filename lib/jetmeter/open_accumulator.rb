@@ -1,7 +1,9 @@
 module Jetmeter
   class OpenAccumulator
-    def valid?(event, flow)
-      event.issue? && opening_transition?(flow)
+    def valid?(resource, flow)
+      resource.issue? &&
+        opening_transition?(flow) &&
+        working?(resource)
     end
 
     def additive
@@ -16,6 +18,10 @@ module Jetmeter
           from.nil? && to.include?(:opened)
         end
       end
+    end
+
+    def working?(issue)
+      !issue.pull_request.nil? || issue[:closed_at].nil?
     end
   end
 end
