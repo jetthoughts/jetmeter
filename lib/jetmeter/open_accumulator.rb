@@ -21,7 +21,7 @@ module Jetmeter
     end
 
     def working?(issue)
-      !issue.pull_request.nil? || issue[:closed_at].nil?
+      !issue.fields.include?(:pull_request) || issue[:closed_at].nil?
     end
   end
 end
