@@ -2,6 +2,7 @@ module Jetmeter; end
 
 require 'octokit'
 require 'csv'
+require 'delegate'
 require 'io/console'
 require 'jetmeter/config'
 require 'jetmeter/config/flow'

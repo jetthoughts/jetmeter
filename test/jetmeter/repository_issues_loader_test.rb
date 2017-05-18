@@ -10,7 +10,7 @@ class Jetmeter::RepositoryIssuesLoaderTest < Minitest::Test
     )
     mocked_client.expect :list_issues, [{}], ['marchi-martius/jetmeter', { state: 'all' }]
 
-    events = Jetmeter::RepositoryIssuesLoader.new(config).load
+    Jetmeter::RepositoryIssuesLoader.new(config).load
 
     mocked_client.verify
   end
