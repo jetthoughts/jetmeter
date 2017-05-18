@@ -3,7 +3,9 @@ module Jetmeter
     MERGED_EVENT = 'merged'.freeze
 
     def valid?(event, flow)
-      event.event == MERGED_EVENT && merging_transition?(flow)
+      event.issue_event? &&
+        event.event == MERGED_EVENT &&
+        merging_transition?(flow)
     end
 
     def additive

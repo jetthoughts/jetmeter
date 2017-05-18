@@ -8,31 +8,39 @@ module Jetmeter
     end
 
     def run
-      repository_issue_events = Jetmeter::RepositoryIssueEventsLoader.new(@config)
-      repository_events = Jetmeter::RepositoryEventsLoader.new(@config)
+      puts "Receiving issue events..."
+      repository_issue_events = Jetmeter::Collection.new(
+        Jetmeter::RepositoryIssueEventsLoader.new(@config).load,
+        Jetmeter::IssueEventAdapter
+      )
+
+      puts "Receiving issues..."
+      repository_issues = Jetmeter::Collection.new(
+        Jetmeter::RepositoryIssuesLoader.new(@config).load,
+        Jetmeter::IssueAdapter
+      )
 
       accums = [
+        Jetmeter::OpenAccumulator.new,
         Jetmeter::LabelAccumulator.new,
         Jetmeter::LabelAccumulator.new(additive: false),
         Jetmeter::CloseAccumulator.new,
         Jetmeter::CloseAccumulator.new(additive: false),
-        Jetmeter::MergeAccumulator.new,
-        Jetmeter::OpenAccumulator.new
+        Jetmeter::MergeAccumulator.new
       ]
       filters = [
         Jetmeter::DateFilter.new
       ]
 
-      puts "Fetching events..."
       reducer = Jetmeter::FlowReducer.new(
-        [repository_events, repository_issue_events],
+        [repository_issues, repository_issue_events],
         @config
       )
 
-      puts "Reducing events..."
+      puts "Analyzing received data..."
       reducer.reduce(accums, filters)
 
-      puts "Merging events"
+      puts "Initializing CSV formatter..."
       formatter = Jetmeter::CsvFormatter.new(@config, reducer)
 
       puts "Saving CSV file..."

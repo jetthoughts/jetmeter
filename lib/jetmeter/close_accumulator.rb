@@ -9,7 +9,9 @@ module Jetmeter
     end
 
     def valid?(event, flow)
-      event.event == CLOSED_EVENT && closing_transition?(flow)
+      event.issue_event? &&
+        event.event == CLOSED_EVENT &&
+        closing_transition?(flow)
     end
 
     private

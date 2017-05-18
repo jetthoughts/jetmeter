@@ -12,41 +12,30 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
     Jetmeter::OpenAccumulator.new
   end
 
-  def test_valid_approves_opened_event_for_opening_flow
+  def test_valid_approves_issue
     event = OpenStruct.new(
-      type: 'IssuesEvent',
-      payload: {
-        action: 'opened',
-        issue: { number: 1 }
-      }
+      issue?: true,
+      number: 1347
     )
 
     assert(build_accumulator.valid?(event, build_flow))
   end
 
-  def test_valid_declines_opened_event_for_regular_flow
-    flow = build_flow(name: 'WIP', opening: false)
+  def test_valid_declines_non_issues
     event = OpenStruct.new(
-      type: 'IssuesEvent',
-      payload: {
-        action: 'opened',
-        issue: { number: 1 }
-      }
+      issue?: false
     )
-
-    refute(build_accumulator.valid?(event, flow))
+    refute(build_accumulator.valid?(event, build_flow))
   end
 
-  def test_valid_declines_other_event
+  def test_valid_declines_issue_for_non_opened_flows
     event = OpenStruct.new(
-      type: 'IssuesEvent',
-      payload: {
-        action: 'edited',
-        issue: { number: 1 }
-      }
+      issue?: true,
+      number: 1347
     )
+    flow = build_flow(opening: false)
 
-    refute(build_accumulator.valid?(event, build_flow))
+    refute(build_accumulator.valid?(event, flow))
   end
 
   def test_additive_always_true

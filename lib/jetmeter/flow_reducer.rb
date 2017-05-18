@@ -2,53 +2,42 @@ module Jetmeter
   class FlowReducer
     attr_reader :flows
 
-    def initialize(events_loaders, config)
-      @events = Array(events_loaders).inject([]) { |events, loader| events + loader.load }
-      @config = config
+    def initialize(resource_collections, config)
+      @resource_collections = resource_collections
+      @config_flows = config.flows
       @flows = Hash.new do |hash, flow_name|
         hash[flow_name] = Hash.new { |flow, date| flow[date] = [] }
       end
     end
 
     def reduce(accumulators, filters)
-      @events.each do |event|
-        reduce_event(event, accumulators, filters)
-      end
-    end
-
-    def merge(other)
-      @flows.merge!(other.flows) do |flow_name, our_dates, their_dates|
-        our_dates.merge(their_dates) do |date, our_events, their_events|
-          our_events + their_events
+      @resource_collections.each do |resource_collection|
+        resource_collection.each do |resource|
+          reduce_resource(resource, accumulators, filters)
         end
       end
-      self
     end
 
     private
 
-    def reduce_event(event, accumulators, filters)
-      @config.flows.each_pair do |flow_name, flow_config|
-        next if filters.any? { |filter| filter.apply?(event, flow_config) }
+    def reduce_resource(resource, accumulators, filters)
+      @config_flows.each_pair do |flow_name, flow_config|
+        next if filters.any? { |filter| filter.apply?(resource, flow_config) }
 
         accumulators.each do |accumulator|
-          if accumulator.valid?(event, flow_config)
-            apply_accumulator(event, accumulator, flow_name)
+          if accumulator.valid?(resource, flow_config)
+            apply_accumulator(resource, accumulator, flow_name)
           end
         end
       end
     end
 
-    def apply_accumulator(event, accumulator, flow_name)
+    def apply_accumulator(resource, accumulator, flow_name)
       if accumulator.additive
-        @flows[flow_name][event.created_at.to_date].push(issue_number(event))
+        @flows[flow_name][resource.flow_date].push(resource.issue_number)
       else
-        @flows[flow_name][event.created_at.to_date].delete(issue_number(event))
+        @flows[flow_name][resource.flow_date].delete(resource.issue_number)
       end
-    end
-
-    def issue_number(event)
-      event.payload ? event.payload.issue[:number] : event.issue[:number]
     end
   end
 end

@@ -1,11 +1,25 @@
 require 'minitest/autorun'
 require 'jetmeter/flow_reducer'
+require 'date'
 
-require_relative '../helpers/test_events_loader'
+require_relative '../helpers/test_flow'
+
+class TestAccumulator
+  attr_accessor :additive
+
+  def initialize(label_name)
+    @additive = true
+    @label_name = label_name
+  end
+
+  def valid?(event, flow)
+    event.label[:name] == @label_name
+  end
+end
 
 class Jetmeter::FlowReducerTest < Minitest::Test
   def build_flow_config
-    OpenStruct.new
+    TestFlow.new
   end
 
   def setup
@@ -15,7 +29,65 @@ class Jetmeter::FlowReducerTest < Minitest::Test
         'Dev - Ready' => build_flow_config
       }
     )
-    @reducer = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
+    resources = [
+      OpenStruct.new({
+        id: 100,
+        issue_event?: true,
+        event: 'labeled',
+        label: { name: 'Backlog' },
+        issue_number: 1,
+        flow_date: Date.iso8601('2017-05-11T10:51')
+      }),
+      OpenStruct.new({
+        id: 101,
+        issue_event?: true,
+        event: 'unlabeled',
+        label: { name: 'Backlog' },
+        issue_number: 2,
+        flow_date: Date.iso8601('2017-05-11T10:51')
+      }),
+      OpenStruct.new({
+        id: 102,
+        issue_event?: true,
+        event: 'unlabeled',
+        label: { name: 'Backlog' },
+        issue_number: 1,
+        flow_date: Date.iso8601('2017-05-11T11:22')
+      }),
+      OpenStruct.new({
+        id: 103,
+        event: 'labeled',
+        issue_event?: true,
+        label: { name: 'Dev - Ready' },
+        issue_number: 1,
+        flow_date: Date.iso8601('2017-05-11T11:23')
+      }),
+      OpenStruct.new({
+        id: 104,
+        event: 'unlabeled',
+        issue_event?: true,
+        label: { name: 'Dev - Ready' },
+        issue_number: 1,
+        flow_date: Date.iso8601('2017-05-12T11:22')
+      }),
+      OpenStruct.new({
+        id: 105,
+        event: 'labeled',
+        issue_event?: true,
+        label: { name: 'Dev - Working' },
+        issue_number: 1,
+        flow_date: Date.iso8601('2017-05-12T11:23')
+      }),
+      OpenStruct.new({
+        id: 106,
+        event: 'unlabeled',
+        issue_event?: true,
+        label: { name: 'Dev - Working' },
+        issue_number: 1,
+        flow_date: Date.iso8601('2017-05-13T11:30')
+      })
+    ]
+    @reducer = Jetmeter::FlowReducer.new([resources], @config)
   end
 
   def test_reduces_configured_flows
@@ -55,47 +127,5 @@ class Jetmeter::FlowReducerTest < Minitest::Test
     @reducer.reduce([accumulator], [])
 
     assert_equal(0, @reducer.flows['Dev - Ready'].values.flatten.count)
-  end
-
-  def test_merge_joins_flows_when_first_has_older_events
-    first = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
-    second = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
-    backlog_accumulator = TestAccumulator.new('Backlog')
-    ready_accumulator = TestAccumulator.new('Dev - Ready')
-
-    first.reduce([backlog_accumulator, ready_accumulator], [])
-    second.reduce([backlog_accumulator], [])
-
-    first.merge(second)
-
-    assert_equal(7, first.flows['Backlog'][Date.new(2017, 5, 11)].count)
-  end
-
-  def test_merge_joins_flows_when_second_has_older_events
-    first = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
-    second = Jetmeter::FlowReducer.new(TestEventsLoader.new, @config)
-
-    backlog_accumulator = TestAccumulator.new('Backlog')
-    wip_accumulator = TestAccumulator.new('Dev - Working')
-
-    first.reduce([wip_accumulator], [])
-    second.reduce([backlog_accumulator, wip_accumulator], [])
-
-    first.merge(second)
-
-    refute(first.flows['Backlog'][Date.new(2017, 5, 11)].empty?)
-  end
-end
-
-class TestAccumulator
-  attr_accessor :additive
-
-  def initialize(label_name)
-    @additive = true
-    @label_name = label_name
-  end
-
-  def valid?(event, flow)
-    event.label[:name] == @label_name
   end
 end

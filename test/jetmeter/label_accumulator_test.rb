@@ -15,6 +15,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
 
   def test_valid_approves_backlog_event
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 1 },
       label: { name: 'Backlog' }
@@ -25,6 +26,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
 
   def test_valid_declines_other_labeled_event
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 1 },
       label: { name: 'Other' }
@@ -38,6 +40,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator = build_accumulator
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'unlabeled',
       issue: { number: 1 },
       label: { name: 'Backlog' },
@@ -46,6 +49,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     refute(accumulator.valid?(event, flow))
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 1 },
       label: { name: 'Dev - Ready' },
@@ -60,6 +64,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator = build_accumulator
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 1 },
       label: { name: 'Dev - Ready' },
@@ -68,6 +73,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     refute(accumulator.valid?(event, flow))
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'unlabeled',
       issue: { number: 1 },
       label: { name: 'Backlog' },
@@ -82,6 +88,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator = build_accumulator
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'unlabeled',
       issue: { number: 1 },
       label: { name: 'Backlog' },
@@ -94,6 +101,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
   def test_valid_declines_event_without_correspondiong_unlabeled_event
     flow = build_flow(from: 'Backlog', to: 'Dev - Ready')
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 3 },
       label: { name: 'Dev - Ready' },
@@ -108,6 +116,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator = build_accumulator
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'unlabeled',
       issue: { number: 1 },
       label: { name: 'Backlog' },
@@ -116,6 +125,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator.valid?(event, flow)
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 1 },
       label: { name: 'Dev - Ready' },
@@ -127,6 +137,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
 
   def test_valid_declines_unlabeled_events
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'unlabeled',
       issue: { number: 1 },
       label: { name: 'Dev - Ready' },
@@ -138,6 +149,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
 
   def test_valid_declines_closed_events
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'closed',
       issue: { number: 1 },
       label: { name: 'Dev - Ready' },
@@ -154,6 +166,7 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator = build_accumulator(additive: false)
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'unlabeled',
       issue: { number: 1 },
       label: { name: 'Dev - Working' },
@@ -162,11 +175,23 @@ class Jetmeter::LabelAccumulatorTest < Minitest::Test
     accumulator.valid?(event, flow)
 
     event = OpenStruct.new(
+      issue_event?: true,
       event: 'labeled',
       issue: { number: 1 },
       label: { name: 'Dev - Ready' },
       created_at: DateTime.iso8601('2017-05-13T11:30:30')
     )
     assert(accumulator.valid?(event, flow))
+  end
+
+  def test_valid_declines_non_issue_events
+    event = OpenStruct.new(
+      issue_event?: false,
+      event: 'labeled',
+      issue: { number: 1 },
+      label: { name: 'Backlog' }
+    )
+
+    refute(build_accumulator.valid?(event, build_flow))
   end
 end

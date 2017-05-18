@@ -13,8 +13,9 @@ module Jetmeter
     end
 
     def valid?(event, flow)
-      store_corresponding_event(event)
+      return false unless event.issue_event?
 
+      store_corresponding_event(event)
       labeling_transition?(flow, event) || unlabeling_transition?(flow, event)
     end
 
@@ -51,8 +52,13 @@ module Jetmeter
       @corresponding_events[corresponding_type].any? do |corresponding|
         corresponding.label[:name] == label &&
           corresponding.issue[:number] == event.issue[:number] &&
-          (corresponding.created_at.to_time - event.created_at.to_time).abs < MAX_LABEL_CHANGE_TIME
+          near?(corresponding, event)
       end
+    end
+
+    def near?(first, second)
+      diff = (first.created_at.to_time - second.created_at.to_time).abs
+      diff < MAX_LABEL_CHANGE_TIME
     end
   end
 end

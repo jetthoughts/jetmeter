@@ -1,12 +1,7 @@
 module Jetmeter
   class OpenAccumulator
-    ISSUES_EVENT_TYPE = 'IssuesEvent'.freeze
-    OPENED_ACTION = 'opened'.freeze
-
     def valid?(event, flow)
-      event.type == ISSUES_EVENT_TYPE &&
-        event.payload[:action] == OPENED_ACTION &&
-        opening_transition?(flow)
+      event.issue? && opening_transition?(flow)
     end
 
     def additive
