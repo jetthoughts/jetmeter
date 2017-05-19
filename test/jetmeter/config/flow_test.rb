@@ -27,4 +27,17 @@ class Jetmeter::Config::FlowTest < Minitest::Test
 
     assert_equal(Time.new(2017, 5, 11), flow.filters[:start_at])
   end
+
+  def test_accumulatove_by_default
+    flow = Jetmeter::Config::Flow.new
+
+    assert(flow.accumulative?)
+  end
+
+  def test_accumulative_can_be_set_to_false
+    flow = Jetmeter::Config::Flow.new
+    flow.accumulative = false
+
+    refute(flow.accumulative?)
+  end
 end

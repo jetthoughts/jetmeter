@@ -4,11 +4,13 @@ module Jetmeter
       attr_reader :additions
       attr_reader :substractions
       attr_accessor :filters
+      attr_writer :accumulative
 
       def initialize
         @additions = Hash.new { |hash, key| hash[key] = [] }
         @substractions = Hash.new { |hash, key| hash[key] = [] }
         @filters = {}
+        @accumulative = true
       end
 
       def register_addition(hash)
@@ -25,6 +27,10 @@ module Jetmeter
 
       def transitions(additive)
         additive ? additions : substractions
+      end
+
+      def accumulative?
+        !!@accumulative
       end
     end
   end
