@@ -29,7 +29,8 @@ module Jetmeter
         Jetmeter::MergeAccumulator.new
       ]
       filters = [
-        Jetmeter::DateFilter.new
+        Jetmeter::DateFilter.new,
+        Jetmeter::OpenFilter.new
       ]
 
       reducer = Jetmeter::FlowReducer.new(
@@ -46,9 +47,8 @@ module Jetmeter
       puts "Saving CSV file..."
       File.open(@config.output_path, 'wb') do |file|
         formatter.save(file)
+        puts "Created CSV: #{@config.output_path}"
       end
-
-      puts "Created CSV: #{@config.output_path}"
     end
 
     private
