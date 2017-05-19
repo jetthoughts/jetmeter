@@ -3,12 +3,15 @@ module Jetmeter
     attr_accessor :repository_name
     attr_accessor :output_path
     attr_reader :flows
+    attr_writer :cache_path
 
-    def initialize(api: Octokit::Client)
+    def initialize(api: Octokit::Client, middleware: Jetmeter::Config::ClientMiddleware)
       raise ArgumentError unless block_given?
 
       @api = api
+      @middleware = middleware
       @flows = {}
+      @cache_path = nil
 
       yield self
     end
@@ -22,6 +25,7 @@ module Jetmeter
       @_client ||= begin
         client = @api.new(@github_credentials)
         client.auto_paginate = true
+        client.middleware = @middleware.build(@cache_path) if @cache_path
         client
       end
     end

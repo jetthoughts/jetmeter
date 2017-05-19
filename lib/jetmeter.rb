@@ -1,11 +1,17 @@
 module Jetmeter; end
 
 require 'octokit'
+require 'faraday-http-cache'
+
 require 'csv'
 require 'delegate'
 require 'io/console'
+require 'fileutils'
+
 require 'jetmeter/config'
 require 'jetmeter/config/flow'
+require 'jetmeter/config/client_middleware'
+require 'jetmeter/config/file_cache_store'
 require 'jetmeter/collection'
 require 'jetmeter/repository_issues_loader'
 require 'jetmeter/repository_issue_events_loader'

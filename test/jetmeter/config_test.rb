@@ -2,21 +2,44 @@ require 'minitest/autorun'
 require 'jetmeter/config'
 
 module Octokit; class Client; end; end
+module Jetmeter; class Config; class ClientMiddleware; end; end; end;
 
 class Jetmeter::ConfigTest < Minitest::Test
-  def test_configures_octokit_client_with_access_token_for_auto_pagination
-    mocked_octokit = Minitest::Mock.new
-    mocked_client = Minitest::Mock.new
-    mocked_octokit.expect(:new, mocked_client, [{ access_token: '<GITHUB_ACCESS_TOKEN>' }])
-    mocked_client.expect(:auto_paginate=, {}, [true])
+  def test_configures_octokit_client_with_access_token_auto_pagination_and_middleware
+    octokit = Minitest::Mock.new
+    client = Minitest::Mock.new
+    middleware = Minitest::Mock.new
 
-    config = Jetmeter::Config.new(api: mocked_octokit) do |c|
+    octokit.expect(:new, client, [{ access_token: '<GITHUB_ACCESS_TOKEN>' }])
+    client.expect(:auto_paginate=, {}, [true])
+    client.expect(:middleware=, {}, ['middleware'])
+    middleware.expect(:build, 'middleware', ['/path/to/cache'])
+
+    config = Jetmeter::Config.new(api: octokit, middleware: middleware) do |c|
+      c.github_credentials = { access_token: '<GITHUB_ACCESS_TOKEN>' }
+      c.cache_path = '/path/to/cache'
+    end
+    config.client
+
+    octokit.verify
+    client.verify
+    middleware.verify
+  end
+
+  def test_does_not_apply_middleware_when_cache_path_not_specified
+    octokit = Minitest::Mock.new
+    client = Minitest::Mock.new
+
+    octokit.expect(:new, client, [{ access_token: '<GITHUB_ACCESS_TOKEN>' }])
+    client.expect(:auto_paginate=, {}, [true])
+
+    config = Jetmeter::Config.new(api: octokit, middleware: Object.new) do |c|
       c.github_credentials = { access_token: '<GITHUB_ACCESS_TOKEN>' }
     end
     config.client
 
-    mocked_client.verify
-    mocked_octokit.verify
+    octokit.verify
+    client.verify
   end
 
   def test_configures_repository_name

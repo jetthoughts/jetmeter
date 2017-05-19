@@ -1,9 +1,11 @@
 module Jetmeter
   class CLI
-    CREDENTIAL_PATH = File.expand_path('~/.jetmeter')
+    CREDENTIAL_PATH = File.expand_path('~/.jetmeter/token').freeze
+    CACHE_PATH = File.expand_path('~/.jetmeter/cache').freeze
 
     def initialize(config_path)
       @config = eval(File.read(config_path))
+      prepare_cache
       authenticate_user
     end
 
@@ -63,6 +65,11 @@ module Jetmeter
         authorization = create_authorization
         save_access_token(authorization.token)
       end
+    end
+
+    def prepare_cache
+      FileUtils.mkdir_p CACHE_PATH
+      @config.cache_path = CACHE_PATH
     end
 
     def ask_credentials
