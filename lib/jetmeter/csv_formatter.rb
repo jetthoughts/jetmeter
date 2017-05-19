@@ -3,7 +3,7 @@ module Jetmeter
     def initialize(config, reducer)
       @config = config
       @reducer = reducer
-      @commulative = Hash.new { |hash, flow| hash[flow] = 0 }
+      @commulative = Hash.new { |hash, flow| hash[flow] = Set.new }
       @dates = @reducer.flows.values.map(&:keys).flatten
     end
 
@@ -23,11 +23,23 @@ module Jetmeter
       return if @dates.empty?
 
       (@dates.min..@dates.max).each do |date|
-        @config.flows.keys.each do |flow_name|
-          events = @reducer.flows[flow_name].fetch(date, []).uniq
-          @commulative[flow_name] += events.length
+        accumulative_flow_names = []
+
+        @config.flows.each_pair do |flow_name, flow_config|
+          issues = Set.new(@reducer.flows[flow_name][date])
+
+          @commulative[flow_name] |= issues
+
+          accumulative_flow_names.each do |accumulative_flow_name|
+            @commulative[accumulative_flow_name] |= issues
+          end
+
+          if flow_config.accumulative?
+            accumulative_flow_names.push(flow_name)
+          end
         end
-        csv << [date.iso8601] + @commulative.values
+
+        csv << [date.iso8601] + @commulative.values.map(&:size)
       end
     end
   end
