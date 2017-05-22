@@ -32,7 +32,7 @@ module Jetmeter
       ]
       filters = [
         Jetmeter::DateFilter.new,
-        Jetmeter::OpenFilter.new
+        Jetmeter::OpenFilter.new(repository_issues)
       ]
 
       reducer = Jetmeter::FlowReducer.new(
