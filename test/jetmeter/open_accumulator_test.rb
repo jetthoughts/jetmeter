@@ -21,7 +21,8 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_valid_approves_pull_request
     issue = TestIssue.new(
       number: 1347,
-      pull_request: {}
+      pull_request: {},
+      state: 'open'
     )
 
     assert(build_accumulator.valid?(issue, build_flow))
@@ -30,7 +31,7 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_valid_approves_open_issues
     issue = TestIssue.new(
       number: 1347,
-      closed_at: nil
+      state: 'open'
     )
 
     assert(build_accumulator.valid?(issue, build_flow))
@@ -39,7 +40,7 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_valid_approves_closed_pull_requests
     issue = TestIssue.new(
       number: 1347,
-      closed_at: Time.new(2017, 2, 11),
+      state: 'closed',
       pull_request: {}
     )
 
@@ -49,7 +50,7 @@ class Jetmeter::OpenAccumulatorTest < Minitest::Test
   def test_valid_declines_closed_issue_without_pull_request
     issue = TestIssue.new(
       number: 1347,
-      closed_at: Time.new(2017, 2, 11)
+      state: 'closed'
     )
 
     refute(build_accumulator.valid?(issue, build_flow))
